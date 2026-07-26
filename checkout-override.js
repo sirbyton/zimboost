@@ -2,6 +2,16 @@
   var SUPABASE_URL = "https://ybncizxgvtfkngvjchgp.supabase.co";
   var SUPABASE_ANON_KEY = "sb_publishable_aonyZhP_jpv2CKRWAeEl9g_bmS_7igl";
 
+  function getBrowserId() {
+    var key = "zimboost_browser_id";
+    var id = localStorage.getItem(key);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(key, id);
+    }
+    return id;
+  }
+
   function getInputByPlaceholder(text) {
     var inputs = document.querySelectorAll("input, textarea");
     for (var i = 0; i < inputs.length; i++) {
@@ -90,6 +100,8 @@
           total_amount: total,
           paynow_reference: approvalCode || null,
           status: "pending",
+          ecocash_sender_name: "Manual EcoCash",
+          browser_id: getBrowserId(),
         }),
       });
 
