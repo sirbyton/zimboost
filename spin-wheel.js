@@ -338,26 +338,49 @@
     refreshState();
   }
 
+  function normalizeText(s) {
+    return (s || "").replace(/\s+/g, " ").trim().toUpperCase();
+  }
+
+  function findWheelAnchor() {
+    var phraseVariants = ["DAILY SPIN CHALLENGE", "NEXT FREE SPIN", "SPIN CHALLENGE"];
+    var bodyText = normalizeText(document.body.innerText || document.body.textContent);
+    var matched = phraseVariants.some(function (p) { return bodyText.includes(p); });
+    if (!matched) return null;
+
+    var all = Array.prototype.slice.call(document.querySelectorAll("body *"));
+    var candidates = all.filter(function (el) {
+      var t = normalizeText(el.textContent);
+      return phraseVariants.some(function (p) { return t.includes(p); });
+    });
+    if (candidates.length === 0) return null;
+
+    candidates.sort(function (a, b) {
+      return a.querySelectorAll("*").length - b.querySelectorAll("*").length;
+    });
+    return candidates[0];
+  }
+
   function tryInit() {
-    var all = document.querySelectorAll("body *");
-    for (var i = 0; i < all.length; i++) {
-      var el = all[i];
-      if (el.children.length === 0 && el.textContent.trim().toUpperCase().includes("DAILY SPIN CHALLENGE")) {
-        var container = el.closest("div");
-        var host = container ? container.parentElement : null;
-        if (host) {
-          var wheelHost = document.createElement("div");
-          wheelHost.id = "zimboost-real-wheel";
-          host.insertBefore(wheelHost, container);
-          if (container.previousElementSibling) {
-            container.previousElementSibling.style.display = "none";
-          }
-          buildWheelUI(wheelHost);
-          return true;
-        }
-      }
+    var anchor = findWheelAnchor();
+    if (!anchor) {
+      console.log("[zimboost wheel] anchor phrase not found yet");
+      return false;
     }
-    return false;
+    var container = anchor;
+    var levels = 0;
+    while (container.parentElement && levels < 5) {
+      container = container.parentElement;
+      levels++;
+    }
+    var host = container.parentElement || document.body;
+    var wheelHost = document.createElement("div");
+    wheelHost.id = "zimboost-real-wheel";
+    host.insertBefore(wheelHost, container);
+    container.style.display = "none";
+    console.log("[zimboost wheel] anchor found, wheel inserted");
+    buildWheelUI(wheelHost);
+    return true;
   }
 
   var attempts = 0;
